@@ -1,43 +1,220 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Send SMS using Firebase</title>
-  </head>
-  <body>
-    <form id="send-sms-form">
-      <input type="text" id="phone-number" placeholder="Phone Number">
-      <button type="submit">Send SMS</button>
-    </form>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-functions.js"></script>
-    
-    <script>
-      const firebaseConfig = {
-      apiKey: "AIzaSyAy51n8WrsAy8R-xbXNanqL9AHQFPtuiZY",
-      authDomain: "sufev7852.firebaseapp.com",
-      databaseURL: "https://sufev7852-default-rtdb.firebaseio.com",
-      projectId: "sufev7852",
-      storageBucket: "sufev7852.appspot.com",
-      messagingSenderId: "733657119988",
-      appId: "1:733657119988:web:7cfdf2d65de520ee21f2a1"		
-      };
-      
-      firebase.initializeApp(firebaseConfig);
-      
-      const sendSMSForm = document.querySelector('#send-sms-form');
-      const phoneNumberInput = document.querySelector('#phone-number');
-
-      sendSMSForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const phoneNumber = phoneNumberInput.value;
-        const sendSMS = firebase.functions().httpsCallable('sendSMS');
-        sendSMS({ phoneNumber: phoneNumber }).then((result) => {
-          console.log(result);
-        }).catch((error) => {
-          alert(error);
-        });
-      });
-    </script>
-  </body>
+<head>
+  <title>Firebase Phone Verification</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <style type="text/css">
+  	body {
+  	font-family: Arial, sans-serif;
+  	margin: 0;
+  	padding: 0;
+  	}
+  	
+  	h1 {
+  	text-align: center;
+  	}
+  	
+  	form {
+  	margin: auto;
+  	max-width: 600px;
+  	}
+  	
+  	label {
+  	display: block;
+  	font-weight: bold;
+  	margin-bottom: 10px;
+  	}
+  	
+  	input[type=tel],
+  	input[type=text] {
+  	padding: 10px;
+  	width: 100%;
+  	border: 1px solid #ccc;
+  	border-radius: 4px;
+  	box-sizing: border-box;
+  	}
+  	
+  	button {
+  	background-color: #4CAF50;
+  	color: white;
+  	padding: 10px;
+  	border: none;
+  	border-radius: 4px;
+  	cursor: pointer;
+  	}
+  	
+  	button:hover {
+  	background-color: #45a049;
+  	}
+  	
+  	#error-message {
+  	color: red;
+  	text-align: center;
+  	}
+  	
+  </style>
+</head>
+<body>
+  <h1>Firebase Phone Verification</h1>
+  <div id="recaptcha-container"></div>
+  <form>
+    <label for="phoneNumber">Enter your phone number:</label><br>
+    <select id="countryCode">
+      <option value="+1">+1 (USA)</option>
+      <option value="+44">+44 (UK)</option>
+      <option value="+91">+91 (India)</option>
+      <!-- Add more country codes as needed -->
+    </select>
+    <input type="tel" id="phoneNumber" name="phoneNumber"><br><br>
+    <button type="button" id="send-code" onclick="sendVerificationCode()">Send verification code</button>
+    <br><br>
+    <label for="verificationCode">Enter the verification code sent to your phone:</label><br>
+    <input type="text" id="verificationCode" name="verificationCode"><br><br>
+    <button type="button" id="verify-code" onclick="verifyCode()">Verify code</button>
+  </form>
+  <p id="error-message"></p>
+  <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-analytics-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-performance-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-functions.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script>
+  	// Initialize Firebase
+  	firebase.initializeApp(firebaseConfig);
+  	
+  	// Get references to the DOM elements
+  	const phoneNumber = document.getElementById('phoneNumber');
+  	const verificationCode = document.getElementById('verificationCode');
+  	const sendCodeButton = document.getElementById('send-code');
+  	const verifyCodeButton = document.getElementById('verify-code');
+  	const errorMessage = document.getElementById('error-message');
+  	const countryCode = document.getElementById('countryCode');
+  	
+  	// Create a Recaptcha verifier
+  	const recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container');
+  	
+  	// Attach click event to the send code button
+  	sendCodeButton.addEventListener('click', () => {
+  	// Get the phone number and country code
+  	const phone = phoneNumber.value;
+  	const code = countryCode.value;
+  	
+  	// Check if phone number is valid
+  	if (!/^[0-9]{10}$/.test(phone)) {
+  	errorMessage.innerText = 'Please enter a valid 10-digit phone number.';
+  	return;
+  	}
+  	
+  	// Clear any previous error messages
+  	errorMessage.innerText = '';
+  	
+  	// Format the phone number
+  	const formattedPhone = `${code}${phone}`;
+  	
+  	// Send the verification code to the user's phone number
+  	firebase.auth().signInWithPhoneNumber(formattedPhone, recaptchaVerifier)
+  	.then((confirmationResult) => {
+  	// Save the verification ID
+  	const verificationId = confirmationResult.verificationId;
+  	
+  	// Show the verification code input field
+  	verificationCode.style.display = 'block';
+  	
+  	// Update the button text and click event
+  	sendCodeButton.innerText = 'Resend code';
+  	sendCodeButton.addEventListener('click', () => {
+  	firebase.auth().signInWithPhoneNumber(formattedPhone, recaptchaVerifier)
+  	.then((confirmationResult) => {
+  	// Update the verification ID
+  	verificationId = confirmationResult.verificationId;
+  	})
+  	.catch((error) => {
+  	console.error(error);
+  	});
+  	});
+  	
+  	// Attach click event to the verify code button
+  	verifyCodeButton.addEventListener('click', () => {
+  	// Get the verification code
+  	const code = verificationCode.value;
+  	
+  	// Verify the code
+  	confirmationResult.confirm(code)
+  	.then((result) => {
+  	// Code is valid
+  	console.log(result.user);
+  	})
+  	.catch((error) => {
+  	// Code is invalid
+  	console.error(error);
+  	});
+  	});
+  	})
+  	.catch((error) => {
+  	// Unable to send verification code
+  	console.error(error);
+  	errorMessage.innerText = 'Unable to send verification code. Please try again later.';
+  	});
+  	});
+  	
+  	
+  	// Send verification code function
+  	function sendVerificationCode() {
+  	// Get phone number input and country code
+  	const phoneNumberInput = document.getElementById("phoneNumber");
+  	const phoneNumber = phoneNumberInput.value;
+  	const countryCodeInput = document.getElementById("countryCode");
+  	const countryCode = countryCodeInput.value;
+  	
+  	// Format phone number for Firebase
+  	const formattedPhoneNumber = formatPhoneNumber(countryCode, phoneNumber);
+  	
+  	// Initialize Firebase phone auth
+  	const appVerifier = window.recaptchaVerifier;
+  	firebase.auth().signInWithPhoneNumber(formattedPhoneNumber, appVerifier)
+  	.then((confirmationResult) => {
+  	// SMS sent. Prompt user to type the code from the message
+  	window.confirmationResult = confirmationResult;
+  	document.getElementById("send-code").disabled = true;
+  	document.getElementById("verificationCode").disabled = false;
+  	document.getElementById("verify-code").disabled = false;
+  	document.getElementById("error-message").textContent = "";
+  	}).catch((error) => {
+  	// Error sending SMS
+  	console.error(error);
+  	document.getElementById("error-message").textContent = "Error sending verification code.";
+  	});
+  	}
+  	
+  	// Verify code function
+  	function verifyCode() {
+  	// Get verification code input
+  	const verificationCodeInput = document.getElementById("verificationCode");
+  	const verificationCode = verificationCodeInput.value;
+  	
+  	// Verify code with Firebase
+  	window.confirmationResult.confirm(verificationCode).then((result) => {
+  	// User signed in successfully
+  	console.log(result.user);
+  	document.getElementById("error-message").textContent = "";
+  	}).catch((error) => {
+  	// Error verifying code
+  	console.error(error);
+  	document.getElementById("error-message").textContent = "Error verifying code. Please try again.";
+  	});
+  	}
+  	
+  	// Format phone number function
+  	function formatPhoneNumber(countryCode, phoneNumber) {
+  	// Remove any non-numeric characters from phone number
+  	const numericPhoneNumber = phoneNumber.replace(/\D/g, "");
+  	
+  	// Add country code to phone number
+  	return `${countryCode}${numericPhoneNumber}`;
+  	}
+  	
+  </script>
+  
+</body>
 </html>
