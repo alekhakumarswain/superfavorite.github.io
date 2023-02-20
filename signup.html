@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<!-- Bootstrap CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+		
+		<!-- Firebase JavaScript SDK -->
+		<script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-auth.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-firestore.js"></script>
+		<style type="text/css">
+			/* Style for the form container */
+			.form {
+			margin: auto;
+			width: 50%;
+			padding: 20px;
+			background-color: #f2f2f2;
+			border-radius: 10px;
+			}
+			
+			/* Style for the form header */
+			.form {
+			text-align: center;
+			margin-bottom: 20px;
+			}
+			
+			/* Style for the form input fields */
+			.form input {
+			width: 100%;
+			padding: 12px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			box-sizing: border-box;
+			margin-bottom: 20px;
+			}
+			
+			/* Style for the submit button */
+			.form button {
+			background-color: #4CAF50;
+			color: white;
+			padding: 12px 20px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			}
+			
+			/* Style for the submit button on hover */
+			.form button:hover {
+			background-color: #45a049;
+			}
+			
+			/* Style for error messages */
+			.form-error {
+			color: red;
+			margin-bottom: 20px;
+			}
+			
+			/* Media query for mobile devices */
+			@media (max-width: 768px) {
+			.form-container {
+			width: 80%;
+			}
+			}
+			
+		</style>
+	</head>
+	<body>
+		<form class="form">
+			<div class="form-group">
+				<label for="name">Name:</label>
+				<input type="text" class="form-control" id="name" required>
+			</div>
+			<div class="form-group">
+				<label for="number">Number:</label>
+				<input type="text" class="form-control" id="number" required>
+			</div>
+			<div class="form-group">
+				<label for="email">Email:</label>
+				<input type="email" class="form-control" id="email" required>
+			</div>
+			<div class="form-group">
+				<label for="password">Password:</label>
+				<input type="password" class="form-control" id="password" required>
+			</div>
+			<button type="submit" class="btn btn-primary">Sign Up</button>
+		</form>
+		
+	</body>
+	<script>
+		// Initialize Firebase
+		var firebaseConfig = {
+			// Your Firebase configuration here
+			apiKey: "AIzaSyAy51n8WrsAy8R-xbXNanqL9AHQFPtuiZY",
+			authDomain: "sufev7852.firebaseapp.com",
+			databaseURL: "https://sufev7852-default-rtdb.firebaseio.com",
+			projectId: "sufev7852",
+			storageBucket: "sufev7852.appspot.com",
+			messagingSenderId: "733657119988",
+			appId: "1:733657119988:web:7cfdf2d65de520ee21f2a1"		
+			
+		};
+		firebase.initializeApp(firebaseConfig);
+		
+		// Add submit event listener to the form
+		document.querySelector('form').addEventListener('submit', function(event) {
+			event.preventDefault(); // Prevent the form from submitting normally
+			
+			// Get the input values from the form
+			var name = document.querySelector('#name').value;
+			var number = document.querySelector('#number').value;
+			var email = document.querySelector('#email').value;
+			var password = document.querySelector('#password').value;
+		
+			// Create the user account with Firebase authentication API
+			firebase.auth().createUserWithEmailAndPassword(email, password)
+			.then(function(userCredential) {
+				var user = userCredential.user;		
+				// Send email verification
+				user.sendEmailVerification();
+				
+				// Verify phone number
+				firebase.auth().currentUser.updatePhoneNumber("+91" + number)
+				.then(function() {
+				alert("Phone number verified!");
+			})
+			.catch(function(error) {
+			console.error(error);
+			alert("Error verifying phone number: " + error.message);
+		});		
+		// Save user data to Firebase Firestore
+		firebase.firestore().collection('users').doc(user.uid).set({
+			name: name,
+			number: number,
+			email: email
+		})
+		.then(function() {
+			alert("User created successfully!");
+		})
+		.catch(function(error) {
+			console.error(error);
+			qalert("Error creating user: " + error.message);
+		});
+		})
+		.catch(function(error) {
+			console.error(error);
+			alert("Error creating user: " + error.message);
+		});
+		});
+	</script>	
+</html>
