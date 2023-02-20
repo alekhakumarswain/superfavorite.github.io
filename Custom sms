@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Firebase SMS Form</title>
+  <style type="text/css">
+  body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  }
+  
+  h1 {
+  text-align: center;
+  }
+  
+  form {
+  margin: auto;
+  max-width: 600px;
+  }
+  
+  label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 10px;
+  }
+  
+  input[type=tel],
+  input[type=text] {
+  padding: 10px;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  }
+  
+  button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  }
+  
+  button:hover {
+  background-color: #45a049;
+  }
+  
+  #error-message {
+  color: red;
+  text-align: center;
+  }
+  
+  </style>
+</head>
+<body>
+  <h1>Firebase SMS Form</h1>
+  <div id="recaptcha-container"></div>
+  <form>
+    <label for="phoneNumber">Enter the phone number to receive the message:</label><br>
+    <select id="countryCode">
+      <option value="+1">+1 (USA)</option>
+      <option value="+44">+44 (UK)</option>
+      <option value="+91">+91 (India)</option>
+      <!-- Add more country codes as needed -->
+    </select>
+    <input type="tel" id="phoneNumber" name="phoneNumber"><br><br>
+    <label for="message">Enter the message to send:</label><br>
+    <input type="text" id="message" name="message"><br><br>
+    <button type="button" id="send-message" onclick="sendCustomizedMessage()">Send message</button>
+  </form>
+  <p id="error-message"></p>
+  <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-analytics-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-performance-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script>
+  /*	// Send verification code to user's phone
+  	function sendVerificationCode() {
+  	// Get phone number and country code from input fields
+  	var phoneNumber = document.getElementById("phoneNumber").value;
+  	var countryCode = document.getElementById("countryCode").value;
+  	var message = document.getElementById("message").value;
+  	// Set message to be sent with verification code
+  
+  	// Create phone auth provider with the given number
+  	var phoneAuthProvider = firebase.auth.PhoneAuthProvider();
+  	var options = {
+  	phoneNumber: countryCode + phoneNumber,
+  	message: message
+  	};
+  	
+  	// Send verification code to user's phone
+  	phoneAuthProvider.verifyPhoneNumber(options)
+  	.then(function (verificationId) {
+  	// Save verification ID for later use
+  	window.confirmationResult = verificationId;
+  	// Display message to user
+  	document.getElementById("error-message").innerHTML = "Verification code sent!";
+  	})
+  	.catch(function (error) {
+  	// Display error message to user
+  	document.getElementById("error-message").innerHTML = error.message;
+  	});
+  	}
+  	*/
+  	
+  	// Initialize Firebase
+  	firebase.initializeApp(firebaseConfig);
+  	
+  	// Send a customized SMS message to the specified phone number
+  	function sendCustomizedMessage() {
+  	// Get the phone number and message input values
+  	const phoneNumber = document.getElementById('phoneNumber').value;
+  	const message = document.getElementById('message').value;
+  	
+  	// Get the selected country code from the dropdown
+  	const countryCode = document.getElementById('countryCode').value;
+  	
+  	// Validate that the phone number and message input values are not empty
+  	if (!phoneNumber || !message) {
+  	document.getElementById('error-message').innerText = 'Please enter a phone number and message';
+  	return;
+  	}
+  	
+  	// Format the phone number with the selected country code
+  	const formattedPhoneNumber = `${countryCode}${phoneNumber}`;
+  	
+  	// Send the SMS message using the Firebase Functions callable function
+  	const sendCustomizedSMS = firebase.functions().httpsCallable('sendCustomizedSMS');
+  	sendCustomizedSMS({ phoneNumber: formattedPhoneNumber, message })
+  	.then(result => {
+  	// Show a success message to the user
+  	document.getElementById('error-message').innerText = `Message sent to ${phoneNumber}!`;
+  	})
+  	.catch(error => {
+  	// Show an error message to the user
+  	document.getElementById('error-message').innerText = 'Error sending message';
+  	console.error(error);
+  	});
+  	}
+  	
+  </script>
+</body>
+</html>
