@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Registration and Login System with Firebase</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<style type="text/css">
+		.container {
+		max-width: 600px;
+		margin: 0 auto;
+		padding: 20px;
+		}
+		
+		h1 {
+		font-size: 28px;
+		font-weight: bold;
+		margin-bottom: 30px;
+		text-align: center;
+		}
+		
+		form {
+		margin-top: 30px;
+		}
+		
+		form label {
+		font-weight: bold;
+		}
+		
+		form input[type="text"],
+		form input[type="tel"],
+		form input[type="email"],
+		form input[type="password"] {
+		display: block;
+		width: 100%;
+		padding: 10px;
+		margin-bottom: 20px;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		box-sizing: border-box;
+		}
+		
+		form button {
+		display: block;
+		width: 100%;
+		padding: 10px;
+		margin-top: 20px;
+		background-color: #007bff;
+		color: #fff;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		}
+		
+		form button:hover {
+		background-color: #0069d9;
+		}
+		
+		.error-message {
+		color: red;
+		margin-top: 10px;
+		}
+		
+	</style>
+	
+</head>
+<body>
+	<div class="container">
+		<h1 class="text-center">Registration and Login System with Firebase</h1>
+		<div id="registration-form" class="col-md-6 mx-auto">
+			<h2>Register</h2>
+			<form>
+				<div class="form-group">
+					<label for="name">Name</label>
+					<input type="text" class="form-control" id="name">
+				</div>
+				<div class="form-group">
+					<label for="number">Phone Number</label>
+					<input type="tel" class="form-control" id="number">
+				</div>
+				<div class="form-group">
+					<label for="email">Email address</label>
+					<input type="email" class="form-control" id="email">
+				</div>
+				<div class="form-group">
+					<label for="password">Password</label>
+					<input type="password" class="form-control" id="password">
+				</div>
+				<div class="form-group">
+					<label for="confirm-password">Confirm Password</label>
+					<input type="password" class="form-control" id="confirm-password">
+				</div>
+				<button type="button" class="btn btn-primary" id="register-btn">Register</button>
+				<b id="login">ALREADY HAVE AN ACCOUNT</b>
+			</form>
+		</div>
+		<div id="login-form" class="col-md-6 mx-auto">
+			<h2>Login</h2>
+			<form>
+				<div class="form-group">
+					<label for="login-email">Email address</label>
+					<input type="email" class="form-control" id="login-email">
+				</div>
+				<div class="form-group">
+					<label for="login-password">Password</label>
+					<input type="password" class="form-control" id="login-password">
+				</div>
+				<button type="button" class="btn btn-primary" id="login-btn">Login</button>
+				<b id="create">CREATE AN ACCOUNT</b>
+			</form>
+		</div>
+	</div>
+
+	<!-- Firebase configuration -->
+	<script src="https://www.gstatic.com/firebasejs/8.2.7/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.2.7/firebase-auth.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.2.7/firebase-firestore.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.2.7/firebase-functions.js"></script>
+	<script src="firebaseConfig.js"></script>
+
+	<!-- JavaScript code for registration and login system with Firebase -->
+	<script src="app.js"></script>
+	<script type="text/javascript">
+		// Hide the sign up container
+		document.getElementById("registration-form").style.display = "none";
+		
+		var loginBut = document.getElementById("login");
+		var signupBut = document.getElementById("create");
+		
+		// Handle the login button click
+		loginBut.addEventListener("click", function() {
+			// Hide the sign up container
+			document.getElementById("registration-form").style.display = "none";
+			// Show the login container
+			document.getElementById("login-form").style.display = "block";
+		});
+		
+		// Handle the sign up button click
+		signupBut.addEventListener("click", function() {
+			// Hide the login container
+			document.getElementById("login-form").style.display = "none";
+			// Show the sign up container
+			document.getElementById("registration-form").style.display = "block";
+		});
+		
+		// Initialize Firebase
+		const firebaseConfig = {
+		apiKey: "AIzaSyAy51n8WrsAy8R-xbXNanqL9AHQFPtuiZY",
+		authDomain: "sufev7852.firebaseapp.com",
+		databaseURL: "https://sufev7852-default-rtdb.firebaseio.com",
+		projectId: "sufev7852",
+		storageBucket: "sufev7852.appspot.com",
+		messagingSenderId: "733657119988",
+		appId: "1:733657119988:web:7cfdf2d65de520ee21f2a1"		
+		};
+		firebase.initializeApp(firebaseConfig);
+		
+		// Sign up a new user
+		const signUpForm = document.querySelector('#signUpForm');
+		signUpForm.addEventListener('submit', (e) => {
+		e.preventDefault();
+		
+		const email = signUpForm['email'].value;
+		const password = signUpForm['password'].value;
+		const name = signUpForm['name'].value;
+		const phoneNumber = signUpForm['phoneNumber'].value;
+		
+		firebase.auth().createUserWithEmailAndPassword(email, password)
+		.then((userCredential) => {
+		// Update the user's display name with their name
+		const user = userCredential.user;
+		user.updateProfile({
+		displayName: name
+		});
+		
+		// Send a verification email to the user's email address
+		user.sendEmailVerification();
+		
+		// Add the user's phone number to their user profile
+		firebase.auth().currentUser.updateProfile({
+		phoneNumber: phoneNumber
+		});
+		
+		// Redirect the user to the home page after signing up
+		window.location.href = 'https://sufev.blogspot.com';
+		})
+		.catch((error) => {
+		// Handle errors that might occur during sign up
+		const errorCode = error.code;
+		const errorMessage = error.message;
+		console.log(`Error: ${errorCode} - ${errorMessage}`);
+		});
+		});
+		
+		// Log in an existing user
+		const loginForm = document.querySelector('#loginForm');
+		loginForm.addEventListener('submit', (e) => {
+		e.preventDefault();
+		
+		const email = loginForm['email'].value;
+		const password = loginForm['password'].value;
+		
+		firebase.auth().signInWithEmailAndPassword(email, password)
+		.then((userCredential) => {
+		// Check if the user's email address has been verified
+		const user = userCredential.user;
+		if (user.emailVerified) {
+		// Redirect the user to the home page after logging in
+		window.location.href = 'https://sufev.blogspot.com';
+		} else {
+		// Display an error message if the user's email address hasn't been verified
+		const errorMessage = 'Please verify your email address before logging in.';
+		console.log(`Error: ${errorMessage}`);
+		}
+		})
+		.catch((error) => {
+		// Handle errors that might occur during login
+		const errorCode = error.code;
+		const errorMessage = error.message;
+		console.log(`Error: ${errorCode} - ${errorMessage}`);
+		});
+		});
+		
+	</script>
+</body>
+</html>
