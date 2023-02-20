@@ -108,7 +108,7 @@
   	
   	// Initialize Firebase
   	firebase.initializeApp(firebaseConfig);
-  	
+  	const functions = firebase.functions();
   	// Send a customized SMS message to the specified phone number
   	function sendCustomizedMessage() {
   	// Get the phone number and message input values
