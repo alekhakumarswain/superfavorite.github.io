@@ -124,6 +124,7 @@
   	// Update the button text and click event
   	sendCodeButton.innerText = 'Resend code';
   	sendCodeButton.addEventListener('click', () => {
+  	for(int i=0;i<=5;i++){
   	firebase.auth().signInWithPhoneNumber(formattedPhone, recaptchaVerifier)
   	.then((confirmationResult) => {
   	// Update the verification ID
@@ -132,7 +133,7 @@
   	.catch((error) => {
   	console.error(error);
   	});
-  	});
+  	}});
   	
   	// Attach click event to the verify code button
   	verifyCodeButton.addEventListener('click', () => {
@@ -161,7 +162,7 @@
   	
   	// Send verification code function
   	function sendVerificationCode() {
-  		for(int i=0;i<=5;i++){
+  		
 	  	// Get phone number input and country code
 	  	const phoneNumberInput = document.getElementById("phoneNumber");
 	  	const phoneNumber = phoneNumberInput.value;
@@ -186,7 +187,7 @@
 	  	console.error(error);
 	  	document.getElementById("error-message").textContent = "Error sending verification code.";
 	  	});
-  	}}
+  	}
   	
   	// Verify code function
   	function verifyCode() {
