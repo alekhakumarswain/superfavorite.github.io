@@ -81,7 +81,9 @@
       const otp = document.getElementById('otp');
 
       // Set default value for country code
-      phoneCode.value = "+91";
+      if (phoneCode) {
+      	phoneCode.value = "+91";
+      }
 
       // Send OTP to phone number
       sendOtpButton.addEventListener('click', (event) => {
