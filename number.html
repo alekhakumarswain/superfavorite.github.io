@@ -63,21 +63,15 @@
   		}
   		
   	</style>
-    <script type="module" src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/9.1.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-performance-compat.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.0.2/firebase-functions.js"></script>
+    <script src="firebaseConfig.js"></script>
     <script>
-      // Initialize Firebase
-      const firebaseConfig = {
-        apiKey: "AIzaSyDYQDBNWLiGmE1qC4OXhcNI-jUiZQLlvGc",
-        authDomain: "telsan.firebaseapp.com",
-        databaseURL: "https://telsan.firebaseio.com",
-        projectId: "telsan",
-        storageBucket: "telsan.appspot.com",
-        messagingSenderId: "234399782199",
-        appId: "1:234399782199:web:b2cd11850ffe6e7404b6b2",
-        
-      };
-      firebase.initializeApp(firebaseConfig);
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
 
       // Get elements
       const phoneCode = document.getElementById('phone-code');
