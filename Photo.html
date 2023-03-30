@@ -10,11 +10,17 @@
 </head>
 <body>
 	<input type="file" id="image-input">
+<button id="detect-button">Detect Faces</button>
+
 	<div id="image-container"></div>
 	<div id="face-container"></div>
 
 	<script>
 		// load the model
+$('#detect-button').on('click', function() {
+	// detect faces and facial landmarks here
+
+
 		Promise.all([
 			blazeface.load(),
 			faceLandmarksDetection.load(faceLandmarksDetection.SupportedPackages.mediapipeFacemesh)
@@ -60,6 +66,7 @@
 				};
 				reader.readAsDataURL(file);
 			});
+});
 		});
 	
 </script>
