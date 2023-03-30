@@ -1,34 +1,67 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Face Detection Example</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@0.0.10/dist/face-landmarks-detection.umd.js"></script>
-  </head>
-  <body>
-    <img src="your-image.jpg" id="inputImg">
-    <canvas id="overlay" width="600" height="400"></canvas>
-    <script>
-      const inputImg = document.getElementById('inputImg');
-      const overlay = document.getElementById('overlay');
-      const model = await faceLandmarksDetection.load(
-        faceLandmarksDetection.SupportedPackages.mediapipeFacemesh);
-      const faceLandmarks = await model.estimateFaces({input: inputImg});
-      const ctx = overlay.getContext('2d');
-      faceLandmarks.forEach(face => {
-        face.scaledMesh.forEach(point => {
-          ctx.beginPath();
-          ctx.arc(
-            point[0] /* x coord */,
-            point[1] /* y coord */,
-            /* radius */ 1.5,
-            /* start angle */ 0,
-            /* end angle */ 2 * Math.PI);
-          ctx.fill();
-        });
-      });
-    </script>
-  </body>
+<head>
+	<title>Face Detection</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.8.0/dist/tf.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@0.3.0/dist/face-landmarks-detection.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.5.2/dist/blazeface.min.js"></script>
+</head>
+<body>
+	<input type="file" id="image-input">
+	<div id="image-container"></div>
+	<div id="face-container"></div>
+
+	<script>
+		// load the model
+		Promise.all([
+			blazeface.load(),
+			faceLandmarksDetection.load(faceLandmarksDetection.SupportedPackages.mediapipeFacemesh)
+		]).then(function([blazefaceModel, faceLandmarksDetectionModel]) {
+			// set up the image input
+			$('#image-input').on('change', function() {
+				var file = $(this)[0].files[0];
+				var reader = new FileReader();
+				reader.onload = function(event) {
+					// display the image
+					var image = $('<img>').attr('src', event.target.result);
+					$('#image-container').html(image);
+
+					// detect faces
+					var tensor = tf.browser.fromPixels(image.get(0));
+					blazefaceModel.estimateFaces(tensor).then(function(blazefacePredictions) {
+						if (blazefacePredictions.length > 0) {
+							// get face landmarks
+							var blazefacePrediction = blazefacePredictions[0];
+							var [startX, startY, endX, endY] = blazefacePrediction.topLeft.concat(blazefacePrediction.bottomRight);
+							var faceImage = tf.image.cropAndResize(tensor.expandDims(), [[startY/image.height, startX/image.width, endY/image.height, endX/image.width]], [0], [224, 224]).squeeze().div(255.0);
+							faceLandmarksDetectionModel.estimateFaces({input: faceImage}).then(function(faceLandmarksPredictions) {
+								// display face landmarks
+								var canvas = $('<canvas>').attr({width: image.width(), height: image.height()});
+								$('#face-container').html(canvas);
+								var context = canvas.get(0).getContext('2d');
+								context.drawImage(image.get(0), 0, 0);
+								faceLandmarksPredictions.forEach(function(faceLandmarksPrediction) {
+									faceLandmarksPrediction.scaledMesh.forEach(function(point) {
+										var x = startX + (endX - startX) * point[0];
+										var y = startY + (endY - startY) * point[1];
+										context.beginPath();
+										context.arc(x, y, 2, 0, 2 * Math.PI);
+										context.fillStyle = 'red';
+										context.fill();
+									});
+								});
+							});
+						} else {
+							alert('No face detected!');
+						}
+					});
+				};
+				reader.readAsDataURL(file);
+			});
+		});
+	
+</script>
+</body>
 </html>
